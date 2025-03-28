@@ -1,0 +1,42 @@
+#Everett Paretti  012026065
+try {
+Get-ADOrganizationalUnit -Identity "OU=Finance,DC=consultingfirm,DC=com" | Set-ADOrganizationalUnit -ProtectedFromAccidentalDeletion $false }
+catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]
+    {Write-Error
+     write-host "Finance OU not found, creating Finance OU"}
+
+try {
+if (Get-ADOrganizationalUnit -Identity "OU=Finance,DC=consultingfirm,DC=com")
+    {Write-Host "Finance already exists, deleting"} }
+catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]
+    {Write-Error
+     write-host " "}
+
+try {
+Remove-ADOrganizationalUnit -identity "OU=Finance,DC=consultingfirm,DC=com" -confirm:$false }
+catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]
+    {Write-Error
+     write-host " "}
+
+New-ADOrganizationalUnit -name "Finance"
+Write-Host "Finance OU created"
+
+#3/27 work session
+
+$CSVusers = Import-CSV -path $.\financePersonnel.csv
+
+foreach ($User in $CSVusers)
+{$firstName= $User.First Name
+$lastName= $User.Last Name
+$displayName= $firstName $lastName
+$postalCode= $User.Postal Code
+$officePhone= $User.Office Phone
+$mobilePhone= $User.Mobile Phone
+$OU = "OU=Finance,DC=consultingfirm,DC=com"
+
+New-ADUser GivenName $firstName Surname $Lastname DisplayName $displayName PostalCode $postalCode OfficePhone $officePhone MobilePhone $mobilePhone Path $OU 
+
+Get-ADUser -Filter * -SearchBase “ou=Finance,dc=consultingfirm,dc=com” -Properties DisplayName,PostalCode,OfficePhone,MobilePhone > .\AdResults.txt
+
+
+pause

@@ -1,0 +1,40 @@
+#Everett Paretti 012026065
+
+
+$database = "ClientDB" #this assigns the variable $database to ClientDB.
+
+try { #beginning of try-catch error handling statement
+$SQLdatabase = SqlServer\Get-SqlDatabase -ServerInstance SRV19-PRIMARY\SQLEXPRESS | Where-Object { $_.Name -eq $database } #this defines $SQLdatabase. tells powershell to access the SQL database at SRV-19-PRIMARY/SQLEXPRESS. It is verified with Windows Auth. This is then piped to Where-Object which compares all names to the variable set as $database
+
+if ($SQLdatabase) #beginning of if else statement. If the database exists-
+{Write-Output "Found database: $($SQLdatabase.Name) Deleting Now" #Writes to the console that there was a name match on the server to the database being looked for
+
+Invoke-Sqlcmd -ServerInstance .\sqlexpress 'alter database [ClientDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE'
+
+Invoke-Sqlcmd -ServerInstance .\sqlexpress 'drop database [ClientDB]'
+
+} else { #if the IF part of the statement didn't trigger, that there was no database name match
+    Write-Output "Database '$database' not found." #Write to the console that the database that the user is searching for wasn't found on the SQL server
+    }
+    } #end of the 'try' portion of the try-catch statement. if an error happened the catch line would activate and send output
+catch [Microsoft.SqlServer.Management.PowerShell.IaaS.GetSqlDatabaseCommand] #Looking for an error in GetSQLDatabase
+    {Write-error "Database ClientDB Not Found" #If an error happened this will be sent to the console
+     write-host " "} #This adds white space to the window to make the output more readable
+     
+
+try {
+(Import-CSV C:\Users\LabAdmin\Desktop\Requirements2\NewClientData.CSV -Header "first_name","last_name","city","county","zip","officePhone","mobilePhone") | Write-SqlTableData -ServerInstance SRV19-PRIMARY\SQLEXPRESS -DatabaseName "ClientDB" -SchemaName "dbo" -TableName “Client_A_Contacts” -Force
+} catch [Microsoft.SqlServer.Management.Powershell.Iaas] #catch error
+    {Write-Error "Could not create database"}
+
+Write-Host "ClientDB Created"
+Write-Host " "
+
+Write-Host "Exporting ClientDB to txt file"
+
+try {
+Invoke-Sqlcmd -Database ClientDB –ServerInstance .\SQLEXPRESS -Query ‘SELECT * FROM dbo.Client_A_Contacts’ > C:\Users\LabAdmin\Desktop\Requirements2\SqlResults.txt
+} catch [SqlExceptionError,Microsoft.SqlServer.Management.PowerShell.GetScriptCommand]
+    {Write-error "Could not open ClientDB and write data to .txt file"}
+
+pause

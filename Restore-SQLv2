@@ -1,6 +1,5 @@
 #Everett Paretti 012026065
 
-
 $database = "ClientDB" #this assigns the variable $database to ClientDB.
 
 try { #beginning of try-catch error handling statement
@@ -9,32 +8,35 @@ $SQLdatabase = SqlServer\Get-SqlDatabase -ServerInstance SRV19-PRIMARY\SQLEXPRES
 if ($SQLdatabase) #beginning of if else statement. If the database exists-
 {Write-Output "Found database: $($SQLdatabase.Name) Deleting Now" #Writes to the console that there was a name match on the server to the database being looked for
 
-Invoke-Sqlcmd -ServerInstance .\sqlexpress 'alter database [ClientDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE'
+Invoke-Sqlcmd -ServerInstance .\sqlexpress 'alter database [ClientDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE' #invoke-sqlcmd lets powershell use SQL based commands and language. This changes the ClientDB database to single user mode to allow it to be deleted without issue
 
-Invoke-Sqlcmd -ServerInstance .\sqlexpress 'drop database [ClientDB]'
+Invoke-Sqlcmd -ServerInstance .\sqlexpress 'drop database [ClientDB]' #uses SQL based command 'drop database' to delete the ClientDB database, if present
 
 } else { #if the IF part of the statement didn't trigger, that there was no database name match
     Write-Output "Database '$database' not found." #Write to the console that the database that the user is searching for wasn't found on the SQL server
     }
     } #end of the 'try' portion of the try-catch statement. if an error happened the catch line would activate and send output
+
 catch [Microsoft.SqlServer.Management.PowerShell.IaaS.GetSqlDatabaseCommand] #Looking for an error in GetSQLDatabase
     {Write-error "Database ClientDB Not Found" #If an error happened this will be sent to the console
      write-host " "} #This adds white space to the window to make the output more readable
      
 
-try {
-(Import-CSV C:\Users\LabAdmin\Desktop\Requirements2\NewClientData.CSV -Header "first_name","last_name","city","county","zip","officePhone","mobilePhone") | Write-SqlTableData -ServerInstance SRV19-PRIMARY\SQLEXPRESS -DatabaseName "ClientDB" -SchemaName "dbo" -TableName “Client_A_Contacts” -Force
-} catch [Microsoft.SqlServer.Management.Powershell.Iaas] #catch error
+try { #beginning of try-catch statement
+(Import-CSV C:\Users\LabAdmin\Desktop\Requirements2\NewClientData.CSV -Header "first_name","last_name","city","county","zip","officePhone","mobilePhone") | Write-SqlTableData -ServerInstance SRV19-PRIMARY\SQLEXPRESS -DatabaseName "ClientDB" -SchemaName "dbo" -TableName “Client_A_Contacts” -Force #first imports the CSV file that holds the table data. -header lets the user define the columns, all of that information is piped over to Write-SqlTableData. -ServerInstance lets the user define where the SQL server is running. DatabaseName is the name of the database that is being deleted and created. dbo is the default schema for many SQL databases. The table is named Client A Contacts. -Force makes write-sqltabledata create the new table
+
+} catch [Microsoft.SqlServer.Management.Powershell.Iaas] #catches an error thrown during database and table creation
     {Write-Error "Could not create database"}
 
-Write-Host "ClientDB Created"
-Write-Host " "
+Write-Host "ClientDB Created" #lets the user know the database creation is complete if an error did not occur
+Write-Host " " #add white space
 
-Write-Host "Exporting ClientDB to txt file"
+Write-Host "Exporting ClientDB to txt file" #lets the user know that the script is now trying to export the Client A Contacts to a text file
 
-try {
-Invoke-Sqlcmd -Database ClientDB –ServerInstance .\SQLEXPRESS -Query ‘SELECT * FROM dbo.Client_A_Contacts’ > C:\Users\LabAdmin\Desktop\Requirements2\SqlResults.txt
-} catch [SqlExceptionError,Microsoft.SqlServer.Management.PowerShell.GetScriptCommand]
-    {Write-error "Could not open ClientDB and write data to .txt file"}
+try { #beginning of try-catch statement
+Invoke-Sqlcmd -Database ClientDB –ServerInstance .\SQLEXPRESS -Query ‘SELECT * FROM dbo.Client_A_Contacts’ > C:\Users\LabAdmin\Desktop\Requirements2\SqlResults.txt #included statement that invokes SQL language and commands, seeks the ClientDB database on the SQLEXPRESS server, SELECTS the wildcard (everything) FROM the Client A Contacts table. This will write all data to the SqlResults.txt file it creates in the $PSScriptRoot folder
+
+} catch [SqlExceptionError,Microsoft.SqlServer.Management.PowerShell.GetScriptCommand] #catch error message
+    {Write-error "Could not open ClientDB and write data to .txt file"} #generates error message for user
 
 pause

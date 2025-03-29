@@ -39,7 +39,7 @@ $displayName= "$firstName $lastName" #this uses the variables to create the disp
 $postalCode= $User.PostalCode #assigns zipcode field
 $officePhone= $User.OfficePhone #assigns office phone field
 $mobilePhone= $User.MobilePhone #assigns cell phone field
-$OU = "OU=Finance,DC=consultingfirm,DC=com" $assigns OU field
+$OU = "OU=Finance,DC=consultingfirm,DC=com" #assigns OU field
 
 New-ADUser -Name $displayName -GivenName $firstName -Surname $lastName -DisplayName $displayName -PostalCode $postalCode -OfficePhone $officePhone -MobilePhone $mobilePhone -Path $OU #Command for creating a new user in AD. It gets the data assigned to the variables in the foreach loop and outputs them into this command so that every account can be created individually
 }

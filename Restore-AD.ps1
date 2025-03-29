@@ -1,25 +1,25 @@
 #Everett Paretti  012026065
 
-set-location $PSScriptRoot
-
 try { #beginning of try-catch error handling
 Get-ADOrganizationalUnit -Identity "OU=Finance,DC=consultingfirm,DC=com" | Set-ADOrganizationalUnit -ProtectedFromAccidentalDeletion $false } #Looks for the OU in AD that by the name of Finance. If it is found it sets its attribute to be able to be deleted.
 catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] #If the OU wasn't found, this catch statement reports the error to the user
-    {Write-error "Finance OU not found" #Error message shown to the user
+    {Write-Host "Searching for Finance Organizational Unit"
+    Write-error "$($_.Exception.Message)" #Error message shown to the user
      write-host " "} #adds whitespace to make the window easier to read
 
 
 try { #beginning of try-catch statement
 if (Get-ADOrganizationalUnit -Identity "OU=Finance,DC=consultingfirm,DC=com") #If statement. Looks for the Finance OU
-    {Write-Host "Finance already exists, deleting"} } #if the finance OU exists, tell the user that it will be deleted
+    {Write-Host "Finance OU already exists" #display to the user that the Finance OU exists
+     Write-Host "Deleting Finance OU"} } #if the finance OU exists, tell the user that it will be deleted
 catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] #catch statement for if the Finance OU doesnt exist
-    {Write-Error "Finance OU not found" #Show this error to the user if the OU wasn't found
+    {Write-Error "$($_.Exception.Message)" #Show this error to the user if the OU wasn't found
      write-host " "} #add whitespace
 
 try { #beginning of try-catch statement
 Remove-ADOrganizationalUnit -identity "OU=Finance,DC=consultingfirm,DC=com" -confirm:$false -Recursive } #Deletes the Finance OU and all of its users. Disables the confirm window.
 catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] #Catch statement for if the Finance OU doesn't exist
-    {Write-Error "Could not delete, no finance OU found" #This shows the user that the script tried to delete the OU but there wasn't a finance OU to delete
+    {Write-Error "$($_.Exception.Message)" #This shows the user that the script tried to delete the OU but there wasn't a finance OU to delete
      write-host " "} #add whitespace
 
 New-ADOrganizationalUnit -name "Finance" #script that adds a new Finance OU
@@ -29,7 +29,7 @@ Write-Host " " #add whitespace
 
 Write-Host "Creating Users, Please Wait" #Informs the user that the script is now creating the users, which will take some time depending on the system
 
-$CSVusers = Import-CSV -path .\financePersonnel.csv #This assigns the variable $CSVusers to the CSV file provided with user information
+$CSVusers = Import-CSV -path "$PSScriptroot\financePersonnel.csv" #This assigns the variable $CSVusers to the CSV file provided with user information
 
 foreach ($User in $CSVusers) #the foreach loop will iterate through every user in the CSV file provided, taking the data, assigning it to a variable, and then creating the user
 {
